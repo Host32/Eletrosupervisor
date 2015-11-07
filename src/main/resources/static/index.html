@@ -1,0 +1,470 @@
+<html>
+
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dist/jquery.jqplot.min.js"></script>
+<script type="text/javascript" src="dist/plugins/jqplot.dateAxisRenderer.min.js"></script>
+<script type="text/javascript" src="dist/plugins/jqplot.logAxisRenderer.min.js"></script>
+<script type="text/javascript" src="dist/plugins/jqplot.canvasTextRenderer.min.js"></script>
+<script type="text/javascript" src="dist/plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
+<script type="text/javascript" src="dist/plugins/jqplot.highlighter.min.js"></script>
+<link rel="stylesheet" type="text/css" href="dist/jquery.jqplot.min.css" />
+<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/themes/smoothness/jquery-ui.css" />
+
+<link rel="stylesheet" href="bootstrap-3.3.4-dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="bootstrap-3.3.4-dist/css/bootstrap-theme.min.css">
+<script src="bootstrap-3.3.4-dist/js/bootstrap.min.js"></script>
+<script src="sockjs-0.3.4.js"></script>
+<script src="stomp.js"></script>
+<link rel="stylesheet" type="text/css" href="ele.css" />
+
+<head>
+
+    <title>EletroSupervisor</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+
+<body>
+    <div id='graf1' class='grafic'>
+    </div>
+    <div id='graf2' class='grafic'>
+
+    </div>
+    <div id='graf3' class='grafic'>
+
+    </div>
+    <div class="grafic">
+        <div id="tabela" class="panel panel-default">
+            <table class="table table-striped">
+                <tr>
+                    <td align="center" colspan="2">Estatísticas</td>
+                </tr>
+                <tr>
+                    <td> Valor Máx</td>
+                    <td id="valormax"></td>
+                </tr>
+                <tr>
+                    <td> Valor Min</td>
+                    <td id="valormin"></td>
+                </tr>
+                <tr>
+                    <td> Média</td>
+                    <td id="media"></td>
+                </tr>
+                <tr>
+                    <td> Moda</td>
+                    <td id="moda"></td>
+                </tr>
+                <tr>
+                    <td> Desvio Padrão</td>
+                    <td id="desvio"></td>
+                </tr>
+
+            </table>
+
+
+        </div>
+    </div>
+    <div id=botoes>
+        <button class="btn btn-primary" id="btn-iniciar"> Iniciar </button>
+        <button class="btn btn-primary" id="btn-pausar"> Pausar </button>
+        <button class="btn btn-primary" id="btn-limpar"> Limpar </button>
+        <button class="btn btn-primary" id="open-config" data-toggle="modal" data-target="#myModal" data-backdrop="false"> Configurações </button>
+        <button class="btn btn-primary" id="btn-exportar" data-toggle="modal" data-target="#exportacaoModal" data-backdrop="false"> Exportar </button>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">Configurações</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label" data-toggle="tooltip" data-placement="left" title="Delay em mili segundos entre cada atualização dos gráficos.">
+                                Delay de atualização(ms):
+                            </label>
+                            <div class="col-sm-8">
+                                <input type="number" class="form-control" id="TAXA_ATUALIZACAO">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label" data-toggle="tooltip" data-placement="left" title="Quantidade de dados exibidos nos gráficos.">
+                                Quantidade de dados:
+                            </label>
+                            <div class="col-sm-8">
+                                <input type="number" class="form-control" id="TAMANHO_DATA">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label" data-toggle="tooltip" data-placement="left" title="Quantidade de dados usados no cálculo de cada passo da média móvel.">
+                                Janela da média móvel:
+                            </label>
+                            <div class="col-sm-8">
+                                <input type="number" class="form-control" id="RAZAO_MEDIA_MOVEL">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label" data-toggle="tooltip" data-placement="left" title="Distância entre cada par de dados usado no cálculo de integração pelo método do trapézio.">
+                                Tamanho do trapézio de integração:
+                            </label>
+                            <div class="col-sm-8">
+                                <input type="number" class="form-control" id="RANGE_TRAPEZIO">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" id="salvar-config">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+        
+    <!-- Modal -->
+    <div class="modal fade" id="exportacaoModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">Exportação</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+		                <textarea id="exportacao-text" class="form-control">
+		                </textarea>
+	                </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var TAXA_ATUALIZACAO = 2000;
+            var TAMANHO_DATA = 1000;
+
+            var RAZAO_MEDIA_MOVEL = 25;
+            var RANGE_TRAPEZIO = 1;
+
+            var pausado = true;
+
+            var data = [];
+            
+            var stompClient = null;
+
+            function mediaMovel(data, elem) {
+                var soma = 0,
+                    x;
+                for (x = elem; x < elem + RAZAO_MEDIA_MOVEL; x++) {
+                    if (data[x]) {
+                        soma += data[x][1];
+                    }
+                }
+
+                return soma / RAZAO_MEDIA_MOVEL;
+            }
+
+            function converteMediaMovel(data) {
+                var newData = [];
+                var x;
+                for (x = 0; x < data.length - RAZAO_MEDIA_MOVEL; x++) {
+                    newData.push(mediaMovel(data, x));
+                }
+
+                return newData;
+            }
+
+            function trapezio(data, elem) {
+                if (data[elem + RANGE_TRAPEZIO]) {
+                    return ((data[elem][1] + data[elem + RANGE_TRAPEZIO][1]) * RANGE_TRAPEZIO) / 2;
+                } else {
+                    return data[elem][1];
+                }
+            }
+
+            function converteTrapezio(data) {
+                var newData = [],
+                    x;
+                for (x = 0; x < data.length - RANGE_TRAPEZIO; x++) {
+                    newData.push(trapezio(data, x));
+                    if (x > 0) {
+                        newData[x] += newData[x - 1];
+                    }
+                }
+
+                return newData;
+            }
+
+            function tabela(data) {
+                var soma = 0,
+                    quantidade = 0,
+                    maximo = null,
+                    minimo = null,
+                    media, moda, valor, numeros = {},
+                    x, vezes, somaVariancia, variancia, desvioPadrao;
+
+                for (x = 0; x < data.length; x++) {
+                    valor = data[x][1] || 0;
+                    quantidade++;
+                    soma += valor;
+
+                    // calcula maximo
+                    if (maximo === null || valor > maximo) {
+                        maximo = valor;
+                    }
+
+                    // calcuma minimo
+                    if (minimo === null || valor < minimo) {
+                        minimo = valor;
+                    }
+
+                    // registra quantas vezes cada numero apareceu
+                    if (!numeros[valor]) {
+                        numeros[valor] = 0;
+                    }
+                    numeros[valor] ++;
+                }
+
+                // calcula media
+                media = soma / quantidade;
+
+                // calcula moda
+                moda = {
+                    numero: null,
+                    vezes: null
+                };
+                for (numero in numeros) {
+                    vezes = numeros[numero];
+                    if (moda.numero === null || vezes > moda.vezes) {
+                        moda.numero = numero;
+                        moda.vezes = vezes;
+                    }
+                }
+                moda = parseInt(moda.numero, 10);
+
+                // calcula variancia
+                somaVariancia = 0;
+                for (x = 0; x < data.length; x++) {
+                    valor = data[x][1] || 0;
+                    somaVariancia += Math.pow(valor - media, 2);
+                }
+                variancia = somaVariancia / (quantidade - 1);
+                desvioPadrao = Math.pow(variancia, (1 / 2));
+
+                $('#valormax').html(Math.round(maximo));
+                $('#valormin').html(Math.round(minimo));
+                $('#media').html(media.toFixed(3));
+                $('#moda').html(Math.round(moda));
+                $('#desvio').html(desvioPadrao.toFixed(3));
+            }
+
+            function plotar(elem, data, titulo) {
+                return $.jqplot(elem, [data], {
+                    seriesColors: ["rgba(78, 135, 194, 0.7)"],
+                    title: titulo,
+                    legend: {
+                        show: false
+                    },
+                    highlighter: {
+                        show: true,
+                        sizeAdjust: 1,
+                        tooltipOffset: 10
+                    },
+                    grid: {
+                        background: 'rgba(57,57,57,0.0)',
+                        drawBorder: false,
+                        shadow: true,
+                        gridLineColor: '#666666',
+                        gridLineWidth: 1
+                    },
+                    seriesDefaults: {
+                        rendererOptions: {
+                            smooth: true,
+                            animation: {
+                                show: false
+                            }
+                        },
+                        showMarker: false
+                    },
+                    series: [
+                        {
+                            fill: true
+                        }
+                    ],
+                    axes: {
+                        xaxis: {
+                            tickOptions: {
+                                angle: -90 //angulo numero inferior
+                            },
+                            tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+                            label: 'Tempo',
+                            labelOptions: {
+                                fontFamily: 'Helvetica',
+                                fontSize: '12pt'
+                            },
+                            labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+                            pad: 0
+                        },
+                        yaxis: {
+                            tickOptions: {
+                                labelPosition: 'middle',
+                                angle: -30 //angulo dos numeros esquerdo
+
+                            },
+                            tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+                            labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+                            labelOptions: {
+                                fontFamily: 'Helvetica',
+                                fontSize: '12pt'
+
+                            },
+                            label: 'Valores',
+                            pad: 0
+                        }
+                    }
+                });
+            }
+
+            function limpar() {
+                data = [];
+                for (var i = 0; i < TAMANHO_DATA; i++) {
+                    data.push([i, 0]);
+                }
+            }
+
+            function leitura(valor) {
+                if (pausado) {
+                    return;
+                }
+                console.log(valor);
+
+                data.shift();
+                var x;
+                for (x = 0; x < data.length; x++) {
+                    data[x][0] -= 1;
+                }
+                data.push([data[data.length - 1][0] + 1, valor]);
+            }
+
+            function atualizar() {
+                if (pausado) {
+                    return;
+                }
+
+                $('#graf1, #graf2, #graf3').html('');
+
+                var graf1 = plotar("graf1", data, "Sinal Original");
+
+                var dataTrapezio = converteTrapezio(data);
+                var graf2 = plotar("graf2", dataTrapezio, "Sinal Integrado");
+
+                var dataMediaMovel = converteMediaMovel(data);
+                var graf3 = plotar("graf3", dataMediaMovel, "Média Móvel");
+
+                tabela(data);
+            }
+
+            function timeOutAtualizaca() {
+                setTimeout(function () {
+                    timeOutAtualizaca();
+
+                    atualizar();
+                }, TAXA_ATUALIZACAO);
+            }
+
+            function reset() {
+                limpar();
+                atualizar();
+            }
+
+            function renderizarConfiguracoes() {
+                $('#TAXA_ATUALIZACAO').val(TAXA_ATUALIZACAO);
+                $('#TAMANHO_DATA').val(TAMANHO_DATA);
+                $('#RAZAO_MEDIA_MOVEL').val(RAZAO_MEDIA_MOVEL);
+                $('#RANGE_TRAPEZIO').val(RANGE_TRAPEZIO);
+            }
+
+            function salvarConfiguracoes() {
+                TAXA_ATUALIZACAO = parseInt($('#TAXA_ATUALIZACAO').val(), 10);
+                TAMANHO_DATA = parseInt($('#TAMANHO_DATA').val(), 10);
+                RAZAO_MEDIA_MOVEL = parseInt($('#RAZAO_MEDIA_MOVEL').val(), 10);
+                RANGE_TRAPEZIO = parseInt($('#RANGE_TRAPEZIO').val(), 10);
+            }
+            
+            function connect() {
+                var socket = new SockJS('/supervisor');
+                stompClient = Stomp.over(socket);            
+                stompClient.connect({}, function(frame) {
+                    stompClient.subscribe('/topic/monitor', function(data){
+                    	leitura(parseInt(JSON.parse(data.body).value, 10));
+                    });
+                });
+            }
+            
+            function serializeData(){
+            	var retorno = '', x;
+            	
+            	for(x = 0; x < data.length; x++){
+            		retorno += data[x][1] + '\n';
+            	}
+            	return retorno;
+            }
+
+            $(document).ready(function () {
+                $.jqplot._noToImageButton = true;
+
+                reset();
+                timeOutAtualizaca();
+                
+                connect();
+
+                $('#btn-iniciar').on('click', function () {
+                    pausado = false;
+
+                    $(this).hide();
+                    $('#btn-pausar').show();
+                });
+
+                $('#btn-pausar').on('click', function () {
+                    pausado = true;
+
+                    $(this).hide();
+                    $('#btn-iniciar').show();
+                }).hide();
+
+                $('#btn-limpar').on('click', function () {
+                    reset();
+                });
+
+                $('#salvar-config').on('click', function () {
+                    salvarConfiguracoes();
+                });
+
+                $('#open-config').on('click', function () {
+                    renderizarConfiguracoes();
+                });
+                
+                $('#btn-exportar').on('click', function () {
+                    $('#exportacao-text').val(serializeData());
+                });
+
+                $('[data-toggle="tooltip"]').tooltip()
+            });
+        }());
+    </script>
+
+
+</body>
+
+
+
+</html>

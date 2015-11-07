@@ -1,0 +1,175 @@
+<html>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="dist/jquery.jqplot.min.js"></script>
+<script type="text/javascript" src="dist/plugins/jqplot.dateAxisRenderer.min.js"></script>
+<script type="text/javascript" src="dist/plugins/jqplot.logAxisRenderer.min.js"></script>
+<script type="text/javascript" src="dist/plugins/jqplot.canvasTextRenderer.min.js"></script>
+<script type="text/javascript" src="dist/plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
+<script type="text/javascript" src="dist/plugins/jqplot.highlighter.min.js"></script>
+<link rel="stylesheet" type="text/css" href="dist/jquery.jqplot.min.css" />
+<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/themes/smoothness/jquery-ui.css" />
+
+<link rel="stylesheet" href="bootstrap-3.3.4-dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="bootstrap-3.3.4-dist/css/bootstrap-theme.min.css">
+<script src="bootstrap-3.3.4-dist/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="ele.css" />
+
+<body>
+    <div id='graf1' class='grafic'>
+    </div>
+    <div id='graf2' class='grafic'>
+
+    </div>
+    <div id='graf3' class='grafic'>
+
+    </div>
+    <div class="grafic">
+        <div id="tabela" class="panel panel-default">
+            <table class="table table-striped">
+                <tr>
+                    <td align="center" colspan="2">Estatísticas</td>
+                </tr>
+                <tr>
+                    <td> Valor Máx</td>
+                    <td id="valormax"></td>
+                </tr>
+                <tr>
+                    <td> Valor Min</td>
+                    <td id="valormin"></td>
+                </tr>
+                <tr>
+                    <td> Média</td>
+                    <td id="media">25252525</td>
+                </tr>
+                <tr>
+                    <td> Moda</td>
+                    <td id="moda"></td>
+                </tr>
+                <tr>
+                    <td> Desvio Padrão</td>
+                    <td id="desvio"></td>
+                </tr>
+
+            </table>
+
+
+        </div>
+    </div>
+    <div id=botoes>
+        <button class="btn btn-primary"> Iniciar </button>
+        <button class="btn btn-primary"> Pausar </button>
+        <button class="btn btn-primary"> Limpar </button>
+        <button class="btn btn-primary" data-toggle="modal" data-target="#myModal" data-backdrop="false"> Configurações </button>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">Configurações</h4>
+                </div>
+                <div class="modal-body">
+                    ...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $.jqplot._noToImageButton = true;
+
+            var data = [];
+            for (var i = 0; i < 100; i++) {
+                data.push([i, Math.random() * 100]);
+            }
+
+
+            function plotar(elem, data, titulo) {
+                return $.jqplot(elem, [data], {
+                    seriesColors: ["rgba(78, 135, 194, 0.7)"],
+                    title: titulo,
+                    legend: {
+                        show: false
+                    },
+                    highlighter: {
+                        show: true,
+                        sizeAdjust: 1,
+                        tooltipOffset: 10
+                    },
+                    grid: {
+                        background: 'rgba(57,57,57,0.0)',
+                        drawBorder: false,
+                        shadow: true,
+                        gridLineColor: '#666666',
+                        gridLineWidth: 1
+                    },
+                    seriesDefaults: {
+                        rendererOptions: {
+                            smooth: true,
+                            animation: {
+                                show: true
+                            }
+                        },
+                        showMarker: false
+                    },
+                    series: [
+                        {
+                            fill: true
+                        }
+                    ],
+                    axes: {
+                        xaxis: {
+                            tickOptions: {
+                                angle: -90 //angulo numero inferior
+                            },
+                            tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+                            label: 'Tempo',
+                            labelOptions: {
+                                fontFamily: 'Helvetica',
+                                fontSize: '12pt'
+                            },
+                            labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+                            pad: 0
+                        },
+                        yaxis: {
+                            tickOptions: {
+                                labelPosition: 'middle',
+                                angle: -30 //angulo dos numeros esquerdo
+
+                            },
+                            tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+                            labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+                            labelOptions: {
+                                fontFamily: 'Helvetica',
+                                fontSize: '12pt'
+
+                            },
+                            label: 'Valores',
+                            pad: 0
+                        }
+                    }
+                });
+            }
+
+
+            var graf1 = plotar("graf1", data, "Sinal Original");
+            var graf2 = plotar("graf2", data, "Sinal Integrado");
+            var graf3 = plotar("graf3", data, "Média Móvel");
+        });
+    </script>
+
+
+</body>
+
+
+
+</html>
